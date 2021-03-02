@@ -3,17 +3,18 @@
     <input type="text" class="todo-input" placeholder="What needs to be done" v-model="newTodo" @keyup.enter="addTodo">
 
     <transition-group name="fade" enter-active-class="animated fadeInUp" leave-active-class="animated fadeOutDown">
-      <div class="todo-item" v-for="(todo, index) in filterTodos" v-bind:key="todo.id">
-        <div class="todo-item">
-          <div class="todo-item-left">
-            <input type="checkbox" v-model="todo.completed">
-            <div class="todo-item-label" v-if="!todo.editing" @dblclick="editTodo(todo)" :class="{ completed : todo.completed }">{{ todo.title }}</div>
-            <input type="text" class="todo-item-edit" v-model="todo.title" v-else v-focus @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)">
-          </div>
-        </div>
-        <div class="remove-item" @click="removeTodo(index)">
-          &times;
-        </div>
+      <div v-for="(todo, index) in filterTodos" v-bind:key="todo.id">
+        <!--<div class="todo-item">-->
+        <!--  <div class="todo-item-left">-->
+        <!--    <input type="checkbox" v-model="todo.completed">-->
+        <!--    <div class="todo-item-label" v-if="!todo.editing" @dblclick="editTodo(todo)" :class="{ completed : todo.completed }">{{ todo.title }}</div>-->
+        <!--    <input type="text" class="todo-item-edit" v-model="todo.title" v-else v-focus @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)">-->
+        <!--  </div>-->
+        <!--</div>-->
+        <!--<div class="remove-item" @click="removeTodo(index)">-->
+        <!--  &times;-->
+        <!--</div>-->
+        <todo-item :todo="todo" :index="index" :checkedAll="anyRemaining" v-on:removeTodo="removeTodo" v-on:finishedDone="finishedDone"></todo-item>
       </div>
     </transition-group>
 
@@ -39,8 +40,12 @@
 </template>
 
 <script>
+import TodoItem from "./TodoItem";
 export default {
   name: "TodoList",
+  components: {
+    TodoItem
+  },
   data() {
     return {
       newTodo: '',
@@ -61,14 +66,6 @@ export default {
           'editing': false
         }
       ]
-    }
-  },
-  directives: {
-    focus: {
-    //  directive definition
-      inserted: function (el) {
-        el.focus();
-      }
     }
   },
   computed: {
@@ -114,16 +111,9 @@ export default {
     removeTodo(index) {
       this.todos.splice(index,1);
     },
-    editTodo(todo){
-      this.beforeEditCache = todo.title;
-      todo.editing = true;
-    },
-    doneEdit(todo){
-      if(todo.title.trim().length == 0)
-      {
-        todo.title = this.beforeEditCache;
-      }
-      todo.editing = false;
+    finishedDone(data)
+    {
+      this.todos.splice(data.index, 1, data.todo);
     },
     checkAllTodos(event)
     {
