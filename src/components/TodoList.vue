@@ -4,34 +4,20 @@
 
     <transition-group name="fade" enter-active-class="animated fadeInUp" leave-active-class="animated fadeOutDown">
       <div v-for="(todo, index) in filterTodos" v-bind:key="todo.id">
-        <!--<div class="todo-item">-->
-        <!--  <div class="todo-item-left">-->
-        <!--    <input type="checkbox" v-model="todo.completed">-->
-        <!--    <div class="todo-item-label" v-if="!todo.editing" @dblclick="editTodo(todo)" :class="{ completed : todo.completed }">{{ todo.title }}</div>-->
-        <!--    <input type="text" class="todo-item-edit" v-model="todo.title" v-else v-focus @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)">-->
-        <!--  </div>-->
-        <!--</div>-->
-        <!--<div class="remove-item" @click="removeTodo(index)">-->
-        <!--  &times;-->
-        <!--</div>-->
-        <todo-item :todo="todo" :index="index" :checkedAll="anyRemaining" v-on:removeTodo="removeTodo" v-on:finishedDone="finishedDone"></todo-item>
+        <todo-item :todo="todo" :index="index" :checkedAll="anyRemaining"></todo-item>
       </div>
     </transition-group>
 
     <div class="extra-container">
-      <div><label><input type="checkbox" :checked="anyRemaining" @change="checkAllTodos($event)">Check All</label></div>
-      <div>{{ remaining }} items left</div>
+      <TodosCheckAll :checkedAllTodos="anyRemaining"></TodosCheckAll>
+      <TodoItemsRemaining :items-remaining="remaining"></TodoItemsRemaining>
     </div>
 
     <div class="extra-container">
-      <div>
-        <button :class="{ active: filter == 'all' }" @click="filter = 'all'">All</button>
-        <button :class="{ active: filter == 'active' }" @click="filter = 'active'">Active</button>
-        <button :class="{ active: filter == 'completed' }" @click="filter = 'completed'">Completed</button>
-      </div>
+      <TodoItemsFilters></TodoItemsFilters>
       <div>
         <transition name="fade">
-          <button v-if="anyCompleted" @click="clearCompleted">Clear Completed</button>
+          <ClearCompleted :any-completed="anyCompleted"></ClearCompleted>
         </transition>
       </div>
     </div>
@@ -41,10 +27,21 @@
 
 <script>
 import TodoItem from "./TodoItem";
+import TodoItemsRemaining from "./TodoItemsRemaining";
+import TodosCheckAll from "./TodosCheckAll";
+import TodoItemsFilters from "./TodoItemsFilters";
+import ClearCompleted from "./ClearCompleted";
 export default {
   name: "TodoList",
   components: {
-    TodoItem
+    TodoItem, TodoItemsRemaining, TodosCheckAll, TodoItemsFilters, ClearCompleted
+  },
+  created() {
+    eventBus.$on('removeTodo', (index) => this.removeTodo(index));
+    eventBus.$on('finishedDone', (data) => this.finishedDone(data));
+    eventBus.$on('checkedAll', () => this.checkAllTodos());
+    eventBus.$on('changedFilters', (filter) => this.filter = filter);
+    eventBus.$on('clearCompleted', () => this.clearCompleted());
   },
   data() {
     return {
@@ -115,7 +112,7 @@ export default {
     {
       this.todos.splice(data.index, 1, data.todo);
     },
-    checkAllTodos(event)
+    checkAllTodos()
     {
       this.todos.forEach(todo => todo.completed = event.target.checked);
     },
@@ -201,9 +198,6 @@ button {
   &:focus {
     outline: none;
   }
-}
-.active {
-  background: lightgreen;
 }
 
 // CSS Transitions
